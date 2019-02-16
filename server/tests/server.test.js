@@ -1,11 +1,20 @@
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todos} = require('./../model/todos');
 const {Users} = require('./../model/users');
 
-const todos = [{text: 'First test todo'}, {text: 'Second test todo'}, {text: 'Third test todo'} ];
+const todos = [{
+  _id: new ObjectID(),
+  text: 'First test todo'
+}, {
+  _id: new ObjectID(),
+  text: 'Second test todo'
+}, {
+  _id: new ObjectID(),
+  text: 'Third test todo'} ];
 
 beforeEach((done) => {
   Todos.remove({}).then(() => {
@@ -62,4 +71,32 @@ describe('GET / Todos', () => {
     })
     .end(done);
   });
+});
+
+describe(' GET /todos/:id', () => {
+  it('should return a todo that matches a legitimate id', (done) => {
+    request(app)
+    .get(`/todos/${todos[0]._id.toHexString()}`)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(todos[0].text);
+    })
+    .end(done);
+  });
+
+  it('should return a 404 if no matching todo found', (done) => {
+    var badID = new ObjectID;
+    request(app)
+    .get(`/todos/${badID.toHexString()}`)
+    .expect(404)
+    .end(done);
+  });
+
+  it('should return a 400 if a malformed id is sent', (done) => {
+    request(app)
+    .get(`/todos/xyz`)
+    .expect(400)
+    .end(done);
+  });
+
 });

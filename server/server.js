@@ -1,6 +1,7 @@
 var {mongoose} = require('./db/mongoose');
 var {Todos} = require('./model/todos');
 var {Users} = require('./model/users');
+const {ObjectID} = require('mongodb');
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -27,6 +28,23 @@ app.get('/todos', (req, res) => {
     res.status(400).send(err);
   })
 });
+
+app.get('/todos/:id', (req, res) => {
+  var id = req.params.id;
+  if (!ObjectID.isValid(id)) {
+    errMsg = 'Object ID is not in a valid format'
+    return res.status(400).send(errMsg);
+  } else {
+    Todos.findById(id).then((todo) => {
+      if (todo) {
+        res.status(200).send({todo});
+      } else {
+        return res.status(404).send();
+      }
+    });
+  }
+});
+
 
 app.listen(3000, () => {
   console.log('Started on port 3000');

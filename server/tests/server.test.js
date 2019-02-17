@@ -8,7 +8,9 @@ const {Users} = require('./../model/users');
 
 const todos = [{
   _id: new ObjectID(),
-  text: 'First test todo'
+  text: 'First test todo',
+  completed: true,
+  completedAt: 3456
 }, {
   _id: new ObjectID(),
   text: 'Second test todo'
@@ -73,7 +75,7 @@ describe('GET / Todos', () => {
   });
 });
 
-describe(' GET /todos/:id', () => {
+describe('GET /todos/:id', () => {
   it('should return a todo that matches a legitimate id', (done) => {
     request(app)
     .get(`/todos/${todos[0]._id.toHexString()}`)
@@ -136,4 +138,46 @@ describe('DELETE/todos/:id', () => {
     .expect(400)
     .end(done);
   });
+});
+
+describe('PATCH/todos/:id', () => {
+  it('should update a todo text with completed true', (done) => {
+    var hexId = todos[0]._id.toHexString();
+    var updObj = {text: 'This is the updated text for the todo', completed: true};
+    request(app)
+    .patch(`/todos/${hexId}`)
+    .send(updObj)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(updObj.text)
+      expect(res.body.todo.completed).toBe(true)
+      expect(res.body.todo.completedAt).toBeA('number')
+    }).end((err, res) => {
+      if (err) {
+        return done(err);
+      } else {
+        return done();
+      }
+    });
+  });
+
+  it('should update a todo with completed false', (done) => {
+    var hexId = todos[0]._id.toHexString();
+    var updObj = {completed: false};
+    request(app)
+    .patch(`/todos/${hexId}`)
+    .send(updObj)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.completed).toBe(false)
+      expect(res.body.todo.completedAt).toBe(null)
+    }).end((err, res) => {
+      if (err) {
+        return done(err);
+      } else {
+        return done();
+      }
+    });
+  });
+
 });

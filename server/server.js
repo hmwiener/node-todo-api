@@ -4,6 +4,7 @@ require('./config/config');
 var {mongoose} = require('./db/mongoose');
 var {Todos} = require('./model/todos');
 var {Users} = require('./model/users');
+var {authenticate} = require('./middleware/authenticate');
 const {ObjectID} = require('mongodb');
 
 const express = require('express');
@@ -108,14 +109,16 @@ app.post('/users', (req, res) => {
   user.save().then(() => {
     return user.generateAuthToken();
   }).then((token) => {
-    res.header('x-auth', token).send(user)
+    res.header('x-auth', token).send(user);
   }).catch((err) => {
     res.status(400).send(err);
   })
 
 });
 
-
+app.get('/users/me', authenticate, (req, res) => {
+  res.send(req.user);
+});
 
 app.listen(port, () => {
   console.log(`Started on port ${port}`);

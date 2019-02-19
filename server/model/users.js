@@ -37,10 +37,28 @@ var UsersSchema = new mongoose.Schema({
     var access = 'auth';
     var token = jwt.sign({_id: user._id.toHexString(), access}, 'hmw98765').toString();
 
+    //user.tokens.push({access, token});
     user.tokens = user.tokens.concat([{access, token}]);
 
     return user.save().then(() => {
       return token;
+    });
+  };
+
+  UsersSchema.statics.findByToken = function (token) {
+    var Users = this;
+    var decoded;
+
+    try {
+      decoded = jwt.verify(token, 'hmw98765');
+    } catch (err) {
+        return Promise.reject();
+    }
+
+    return Users.findOne({
+      '_id': decoded._id,
+      'tokens.token': token,
+      'tokens.access': 'auth'
     });
   };
 

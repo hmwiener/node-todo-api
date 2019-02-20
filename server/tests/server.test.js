@@ -295,7 +295,25 @@ describe('POST /users/login', () => {
       if (err) {
         return done(err);
       }
-      // return done();
+      Users.findByCredentials(users[0].userEmail).then((user) => {
+        expect(user.tokens.length).toBe(0);
+        done();
+      }).catch((err) => done(err));
+    });
+  });
+});
+
+describe('DELETE /users/me/token', () => {
+
+  it('should delete a user auth token on logout', (done) => {
+    request(app)
+    .delete('/users/me/token')
+    .set('x-auth', users[0].tokens[0].token)
+    .expect(200)
+    .end((err, res) => {
+      if (err) {
+        return done(err);
+      }
       Users.findByCredentials(users[0].userEmail).then((user) => {
         expect(user.tokens.length).toBe(0);
         done();

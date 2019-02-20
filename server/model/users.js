@@ -81,6 +81,32 @@ var UsersSchema = new mongoose.Schema({
     }
   });
 
+  UsersSchema.statics.findByCredentials = function(userEmail, password) {
+    var Users = this;
+
+    return Users.findOne({userEmail}).then((user) => {
+      if (!user) {
+        return Promise.reject();
+      } else {
+        // bcrypt.genSalt(13, (err, salt) => {
+        //   bcrypt.hash(password, salt, (err, hash) => {
+        //     var hashPassword = hash;
+        //   });
+        // });
+
+        return new Promise((resolve, reject) => {
+          bcrypt.compare(password, user.password, (err, res) => {
+            if (res) {
+              resolve(user);
+            } else {
+              reject();
+            }
+          });
+        });
+      }
+    });
+  };
+
   UsersSchema.methods.toJSON = function () {
     var user = this;
     var userObject = user.toObject();

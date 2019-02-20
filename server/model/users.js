@@ -88,11 +88,6 @@ var UsersSchema = new mongoose.Schema({
       if (!user) {
         return Promise.reject();
       } else {
-        // bcrypt.genSalt(13, (err, salt) => {
-        //   bcrypt.hash(password, salt, (err, hash) => {
-        //     var hashPassword = hash;
-        //   });
-        // });
 
         return new Promise((resolve, reject) => {
           bcrypt.compare(password, user.password, (err, res) => {
@@ -103,6 +98,17 @@ var UsersSchema = new mongoose.Schema({
             }
           });
         });
+      }
+    });
+  };
+
+  UsersSchema.methods.removeToken = function (token) {
+
+    var user = this;
+
+    return user.update({
+      $pull: {
+        tokens: {token}
       }
     });
   };

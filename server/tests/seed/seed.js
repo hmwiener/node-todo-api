@@ -1,9 +1,6 @@
-// const expect = require('expect');
-// const request = require('supertest');
 const {ObjectID} = require('mongodb');
 const jwt = require('jsonwebtoken');
 
-// const {app} = require('./../server');
 const {Todos} = require('./../../model/todos');
 const {Users} = require('./../../model/users');
 
@@ -16,7 +13,7 @@ const users = [{
   password: 'u1Password',
   tokens: [{
     access: 'auth',
-    token: jwt.sign({_id: userOneId, access: 'auth'}, 'hmw98765').toString()
+    token: jwt.sign({_id: userOneId, access: 'auth'}, process.env.JWT_SECRET).toString()
   }]
   }, {
     _id: userTwoId,
@@ -24,7 +21,7 @@ const users = [{
     password: 'u2Password',
     tokens: [{
       access: 'auth',
-      token: jwt.sign({_id: userTwoId, access: 'auth'}, 'hmw98765').toString()
+      token: jwt.sign({_id: userTwoId, access: 'auth'}, process.env.JWT_SECRET).toString()
     }]
   }];
 

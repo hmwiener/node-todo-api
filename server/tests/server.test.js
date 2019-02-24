@@ -152,11 +152,11 @@ describe('DELETE/todos/:id', () => {
     .end(done);
   });
 
-  it('should return a 400 if a malformed id number was submitted', (done) => {
+  it('should return a 404 if a malformed id number was submitted', (done) => {
     request(app)
     .delete(`/todos/xyz123`)
     .set('x-auth', users[0].tokens[0].token)
-    .expect(400)
+    .expect(404)
     .end(done);
   });
 });

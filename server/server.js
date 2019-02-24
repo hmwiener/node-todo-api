@@ -57,29 +57,49 @@ app.get('/todos/:id', authenticate, (req, res) => {
   }
 });
 
-app.delete('/todos/:id', authenticate, (req, res) => {
-  var id = req.params.id;
+// app.delete('/todos/:id', authenticate, (req, res) => {
+//   var id = req.params.id;
+//
+//   if (!ObjectID.isValid(id)) {
+//     errMsg = 'Object ID is not in a valid format'
+//     return res.status(400).send(errMsg);
+//   }
+//
+//   Todos.findOneAndRemove({
+//     _id: id,
+//     _creator: req.user._id
+//   }).then((todo) => {
+//
+//     if (!todo) {
+//       return res.status(404).send();
+//     }
+//
+//     res.status(200).send({todo});
+//
+//     }).catch((err) => {
+//     return res.status(404).send();
+//   });
+//
+// });
+
+app.delete('/todos/:id', authenticate, async (req, res) => {
+  const id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
-    errMsg = 'Object ID is not in a valid format'
-    return res.status(400).send(errMsg);
+    return res.status(404).send();
   }
 
-  Todos.findOneAndRemove({
-    _id: id,
-    _creator: req.user._id
-  }).then((todo) => {
-
+  try {
+    const todo = await Todos.findOneAndRemove({_id: id, _creator: req.user._id});
     if (!todo) {
       return res.status(404).send();
+    } else {
+      res.send({todo});
     }
 
-    res.status(200).send({todo});
-
-    }).catch((err) => {
-    return res.status(404).send();
-  });
-
+  } catch (err) {
+    return res.status(400).send();
+  }
 });
 
 app.patch('/todos/:id', authenticate, (req, res) => {
@@ -113,45 +133,50 @@ app.patch('/todos/:id', authenticate, (req, res) => {
   });
 });
 
+app.post('/users', async (req, res) => {
 
-app.post('/users', (req, res) => {
-  var body = _.pick(req.body, ['userEmail', 'password']);
-  var user = new Users(body);
+  try {
+    const body = _.pick(req.body, ['userEmail', 'password']);
+    const user = new Users(body);
 
-  user.save().then(() => {
-    return user.generateAuthToken();
-  }).then((token) => {
+    await user.save();
+    if (!user) {
+      throw new Error('Couldn\'t save user');
+    }
+    const token = await user.generateAuthToken();
+    if (!token) {
+      throw new Error('Couldn\'t generate token');
+    }
     res.header('x-auth', token).send(user);
-  }).catch((err) => {
-    res.status(400).send(err);
-  })
-
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
 });
 
 app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
 });
 
-
-app.post('/users/login', (req, res) => {
-  var body = _.pick(req.body, ['userEmail', 'password']);
-
-  Users.findByCredentials(body.userEmail, body.password).then((user) => {
-    return user.generateAuthToken().then((token) => {
-      res.header('x-auth', token).send(user);
-    });
-  }).catch((err) => {
+app.post('/users/login', async (req, res) => {
+  try {
+    const body = _.pick(req.body, ['userEmail', 'password']);
+    const user = await Users.findByCredentials(body.userEmail, body.password)
+    const token = await user.generateAuthToken();
+    res.header('x-auth', token).send(user);
+  } catch (err) {
     res.status(400).send('User not found or password incorrect');
-  });
+  }
 });
 
-app.delete('/users/me/token', authenticate, (req, res) => {
-  req.user.removeToken(req.token).then(() => {
+app.delete('/users/me/token', authenticate, async (req, res) => {
+  try {
+    await req.user.removeToken(req.token);
     res.status(200).send();
-  }, () => {
+  } catch {
     res.status(400).send();
-  });
+  }
 });
+
 
 app.listen(port, () => {
   console.log(`Started on port ${port}`);
